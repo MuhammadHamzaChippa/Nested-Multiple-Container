@@ -71,6 +71,7 @@ const Grid = () => {
             setItems((items) => {
                 const activeItems = items[activeContainer];
                 const overItems = items[overContainer];
+                
                 const overIndex = overItems.findIndex(item => item.id === overId);
                 const activeIndex = activeItems.findIndex(item => item.id === active.id)
 

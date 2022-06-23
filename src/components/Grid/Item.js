@@ -1,6 +1,7 @@
 import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import './Item.css'
 
 const Item = ({item}) => {
     const {
@@ -17,7 +18,6 @@ const Item = ({item}) => {
         transform: CSS.Transform.toString(transform),
         // border: isDragging ? "3px solid red" : "1px solid black",
         // backgroundColor: isDragging ? "#89dbff" : "white",
-        opacity: isDragging ? 0.5 : 1,
     }
 
     return (
@@ -25,7 +25,7 @@ const Item = ({item}) => {
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            className='bg-[yellow] p-[50px] text-center opacity-1'
+            className={`${isDragging ? 'transparent-div': 'opacity-div' } bg-[yellow] p-[50px] text-center `}
             style={style}>
             {item.text}
         </div>
