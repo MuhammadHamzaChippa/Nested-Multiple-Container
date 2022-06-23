@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom';
 import {
     DndContext,
     closestCenter,
@@ -8,49 +9,19 @@ import {
     useSensors,
     DragOverlay
 } from "@dnd-kit/core";
-import { CSS } from '@dnd-kit/utilities'
 import {
     arrayMove,
     SortableContext,
     sortableKeyboardCoordinates,
     rectSortingStrategy,
-    useSortable
 } from "@dnd-kit/sortable";
+import Item from './Item';
 
-const Item = ({ item }) => {
-    const {
-        setNodeRef,
-        attributes,
-        listeners,
-        transition,
-        transform,
-        isDragging
-    } = useSortable({ id: item })
-
-    const style = {
-        transition,
-        transform: CSS.Transform.toString(transform),
-        // border: isDragging ? "3px solid red" : "1px solid black",
-        // backgroundColor: isDragging ? "#89dbff" : "white",
-        opacity: isDragging ? 0.5 : 1,
-    }
-
-    return (
-        <div
-            ref={setNodeRef}
-            {...attributes}
-            {...listeners}
-            className='bg-[yellow] p-[50px] text-center'
-            style={style}>
-            {item}
-        </div>
-    )
-}
 
 const Grid = () => {
     const [items, setItems] = useState({
-        A: ["A1" , "A2" , "A3" , "A4" , "A5"],
-        B: ["B1" , "B2" , "B3" , "B4" , "B5"]
+        A:  [{id: "1" , text: "A1"} , {id: "2" , text: "A2"} , {id: "3" , text: "A3"}  , {id: "4" , text: "A4"}  , {id: "5" , text: "A5"} ],
+        B: [{id: "6" , text: "B1"} , {id: "7" , text: "B2"} , {id: "8" , text: "B3"}  , {id: "9" , text: "B4"}  , {id: "10" , text: "B5"}]
     }
     )
     const [containers, setContainers] = useState(Object.keys(items))
@@ -67,7 +38,7 @@ const Grid = () => {
         if (id in items) {
             return id
         }
-        return Object.keys(items).find((key) => items[key].includes(id));
+        return Object.keys(items).find((key) => items[key].map(item => item.id).includes(id));
     }
 
     const sensors = useSensors(
@@ -78,8 +49,10 @@ const Grid = () => {
     );
 
     const handleDragStart = ({ active }) => {
-        console.log(active.id)
-        setActiveId(active.id)
+        const container = findContainer(active.id)
+        const idx = items[container].findIndex(item => item.id === active.id)
+        console.log(items[container][idx])
+        setActiveId(items[container][idx])
     }
 
     const handleDragOver = ({ active, over }) => {
@@ -98,8 +71,8 @@ const Grid = () => {
             setItems((items) => {
                 const activeItems = items[activeContainer];
                 const overItems = items[overContainer];
-                const overIndex = overItems.indexOf(overId);
-                const activeIndex = activeItems.indexOf(active.id)
+                const overIndex = overItems.findIndex(item => item.id === overId);
+                const activeIndex = activeItems.findIndex(item => item.id === active.id)
 
                 let newIndex;
                 if (overId in items) {
@@ -120,7 +93,7 @@ const Grid = () => {
                 return {
                     ...items,
                     [activeContainer]: items[activeContainer].filter(
-                        (item) => item !== active.id
+                        (item) => item.id !== active.id
                     ),
                     [overContainer]: [
                         ...items[overContainer].slice(0, newIndex),
@@ -152,8 +125,8 @@ const Grid = () => {
 
         const overContainer = findContainer(overId);
         if (overContainer) {
-            const activeIndex = items[activeContainer].indexOf(active.id);
-            const overIndex = items[overContainer].indexOf(overId);
+            const activeIndex = items[activeContainer].findIndex(item => item.id === active.id);
+            const overIndex = items[overContainer].findIndex(item => item.id === overId);
   
             if (activeIndex !== overIndex) {
               setItems((items) => ({
@@ -196,17 +169,18 @@ const Grid = () => {
                         <div className='bg-[grey]'>
                             <h1>{container}</h1>
                             <div className='bg-[green] grid grid-cols-4 gap-4 p-[20px] m-[10px]'>
-                                <SortableContext items={items[container]} strategy={rectSortingStrategy}>
+                                <SortableContext items={items[container].map(item => item.id)} strategy={rectSortingStrategy}>
                                     {items[container].map(item => {
                                         return (
-                                            <Item item={item} key={item} />
+                                            <Item item={item} key={item.id} />
                                         )
                                     })}
-                                    {/* <DragOverlay>
-                                        {activeItem ? (
-                                            <Item item={activeItem} />
+                                    <DragOverlay>
+                                        {activeId ? (
+                                            <Item item={activeId} />
                                         ) : null}
-                                    </DragOverlay> */}
+                                    </DragOverlay> 
+                                    
                                 </SortableContext>
                             </div>
                         </div>
