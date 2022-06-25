@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom';
 import {
     DndContext,
     closestCenter,
     KeyboardSensor,
     PointerSensor,
+    TouchSensor,
     useSensor,
     useSensors,
     DragOverlay
@@ -43,25 +43,29 @@ const Grid = () => {
 
     const sensors = useSensors(
         useSensor(PointerSensor),
+        useSensor(TouchSensor , {}) , 
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates
         })
     );
 
-    const handleDragStart = ({ active }) => {
-        const container = findContainer(active.id)
-        const idx = items[container].findIndex(item => item.id === active.id)
-        console.log(items[container][idx])
+    const handleDragStart = (result) => {
+        const container = findContainer(result.active.id)
+        const idx = items[container].findIndex(item => item.id === result.active.id)
+        console.log("Start" , result)
         setActiveId(items[container][idx])
     }
 
-    const handleDragOver = ({ active, over }) => {
+    const handleDragOver = (result) => {
+        console.log("Drag Over", result)
+        const {active, over} = result;
         const overId = over?.id;
         if (overId == null || active.id in items) {
             return;
         }
         const overContainer = findContainer(overId);
         const activeContainer = findContainer(active.id);
+         
         if (!overContainer || !activeContainer) {
             console.log("No container found");
             return;
@@ -109,8 +113,9 @@ const Grid = () => {
         }
     }
 
-    const handleDragEnd = ({ active, over }) => {
-       const activeContainer = findContainer(active.id) ; 
+    const handleDragEnd = (result) => {
+       const {active, over} = result
+        const activeContainer = findContainer(active.id) ; 
        
        if (!activeContainer) {
         setActiveId(null); 

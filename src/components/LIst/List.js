@@ -3,8 +3,31 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd'
 import Item from './Item'
 const List = () => {
     const [items, setItems] = useState({
-        A: [{ id: "1", text: "A1" }, { id: "2", text: "A2" }, { id: "3", text: "A3" }, { id: "4", text: "A4" }, { id: "5", text: "A5" }],
-        B: [{ id: "6", text: "B1" }, { id: "7", text: "B2" }, { id: "8", text: "B3" }, { id: "9", text: "B4" }, { id: "10", text: "B5" }]
+        A: [{
+            id: "1", text: "A1",
+            blocks: [{ id: "11", text: '1 - subtextA1' }, { id: "12", text: "2 - subtextA1" }, { id: "13", text: "3 - subtextA1" }]
+        },
+        {
+            id: "2", text: "A2",
+            blocks: [{ id: "14", text: '1 - subtextA2' }, { id: "15", text: "2 - subtextA2" }, { id: "16", text: "3 - subtextA2" }]
+        },
+        {
+            id: "3", text: "A3",
+            blocks: [{ id: "17", text: '1 - subtextA3' }, { id: "18", text: "2 - subtextA3" }, { id: "19", text: "3 - subtextA3" }]
+        },
+        ],
+        B: [{
+            id: "6", text: "B1",
+            blocks: [{ id: "19", text: '1 - subtextB1' }, { id: "20", text: "2 - subtextB1" }, { id: "21", text: "3 - subtextB1" }]
+        },
+        {
+            id: "7", text: "B2",
+            blocks: [{ id: "22", text: '1 - subtextB2' }, { id: "23", text: "2 - subtextB2" }, { id: "24", text: "3 - subtextB2" }]
+        },
+        {
+            id: "8", text: "B3",
+            blocks: [{ id: "25", text: '1 - subtextB3' }, { id: "26", text: "2 - subtextB3" }, { id: "27", text: "3 - subtextB3" }]
+        }]
     })
 
     const [containers, setContainers] = useState(Object.keys(items))
@@ -20,27 +43,92 @@ const List = () => {
         return result;
     };
 
+    const reorder = (list, startIndex, endIndex) => {
+        const result = Array.from(list);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+
+        return result;
+    }
+
     const onDragEnd = (result) => {
         if (!result.destination) {
             return;
         }
         console.log(result)
-        const listCopy = { ...items };
+        const newItems = { ...items };
 
-        const sourceList = listCopy[result.source.droppableId];
-        const [removedElement, newSourceList] = removeFromList(
-            sourceList,
-            result.source.index
-        );
-        listCopy[result.source.droppableId] = newSourceList;
-        const destinationList = listCopy[result.destination.droppableId];
-        listCopy[result.destination.droppableId] = addToList(
-            destinationList,
-            result.destination.index,
-            removedElement
-        );
 
-        setItems(listCopy);
+        const sourceIndex = result.source.index
+        const destinationIndex = result.destination.index
+        if (result.type === "cards") {
+            const sourceContainer = result.source.droppableId
+            const destinationContainer = result.destination.droppableId
+            const sourceList = newItems[sourceContainer];
+            const [removedElement, newSourceList] = removeFromList(
+                sourceList,
+                sourceIndex
+            );
+            newItems[sourceContainer] = newSourceList;
+            const destinationList = newItems[destinationContainer];
+            newItems[destinationContainer] = addToList(
+                destinationList,
+                destinationIndex,
+                removedElement
+            );
+
+            setItems(newItems);
+        }
+
+        if (result.type === 'blocks') {
+            const [sourceContainer, sourceCardId] = result.source.droppableId.split(',')
+            const [destinationContainer, destinationCardId] = result.destination.droppableId.split(',')
+            const sourceList = newItems[sourceContainer]
+            const destinationList = newItems[destinationContainer]
+            const sourceBlocks = sourceList.find(card => card.id === sourceCardId).blocks
+            const destinationBlocks = destinationList.find(card => card.id === destinationCardId).blocks
+            if (sourceCardId === destinationCardId) {
+                // order it in the same block
+                const reorderedBlocks = reorder(sourceBlocks, sourceIndex, destinationIndex)
+                const newSourceList = sourceList.map(card => {
+                    if (card.id === sourceCardId) {
+                        card.blocks = reorderedBlocks
+                    }
+                    return card
+                } )
+                newItems[sourceContainer] = newSourceList
+                setItems(newItems)
+            }
+            else { 
+                const [removedBlock, newSourceBlocks] = removeFromList(
+                    sourceBlocks,
+                    sourceIndex
+                ); 
+                const newDestinationBlocks = addToList(
+                    destinationBlocks,
+                    destinationIndex,
+                    removedBlock
+                );
+                const newSourceList = sourceList.map(card =>{
+                    if (card.id === sourceCardId) {
+                        card.blocks = newSourceBlocks
+                    }
+                    return card
+                })
+                const newDestinationList = destinationList.map( card => {
+                    if (card.id === destinationCardId) {
+                        card.blocks = newDestinationBlocks
+                    }
+                    return card
+                })
+                newItems[sourceContainer] = newSourceList
+                newItems[destinationContainer] = newDestinationList
+                setItems(newItems)
+
+            }
+        }
+
+
     };
 
     return (
@@ -51,11 +139,11 @@ const List = () => {
                         return (
                             <div className='bg-[green] p-[10px]' key={index}>
                                 <div className='bg-[white] text-center'>{container}</div>
-                                <Droppable droppableId={container} >
+                                <Droppable droppableId={container} type="cards">
                                     {(provided) => (
                                         <div {...provided.droppableProps} ref={provided.innerRef} className="bg-[red] p-[5px]">
                                             {items[container].map((item, index) => (
-                                                <Item item={item} index={index} />
+                                                <Item item={item} container={container} index={index} />
                                             ))}
                                             {provided.placeholder}
                                         </div>
