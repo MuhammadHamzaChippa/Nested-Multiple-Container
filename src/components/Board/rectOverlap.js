@@ -6,7 +6,7 @@ function sortCollisionsDesc({data: {value: a}}, {data: {value: b}}) {
 /**
  * Returns the intersecting rectangle area between two rectangles
  */
-export function getIntersectionRatio(
+export function isOverlap(
   entry,
   target
 ) {
@@ -21,9 +21,7 @@ export function getIntersectionRatio(
     const targetArea = target.width * target.height;
     const entryArea = entry.width * entry.height;
     const intersectionArea = width * height;
-    console.log(intersectionArea , " " , targetArea)
     if (intersectionArea === targetArea) {
-      console.log(true)
       return true
     }
   }
@@ -49,7 +47,7 @@ export const rectOverlap = ({
 
 
     if (rect) {
-      const isOverlap = getIntersectionRatio(rect, collisionRect);
+      const isOverlap = isOverlap(rect, collisionRect);
 
       if (isOverlap) {
         collisions.push({
