@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import {
-  DndContext, useSensors, useSensor, KeyboardSensor, PointerSensor, TouchSensor, useDraggable, useDroppable, pointerWithin
+  DndContext, useSensors, useSensor, KeyboardSensor, PointerSensor, TouchSensor, useDraggable, useDroppable, pointerWithin, closestCenter
 } from '@dnd-kit/core'
 import './Board.css'
-import { restrictToParentElement, restrictToWindowEdges } from '@dnd-kit/modifiers'
+import { restrictToWindowEdges } from '@dnd-kit/modifiers'
+import { rectOverlap } from './rectOverlap'
 
 const Card = ({ item }) => {
   const {
@@ -31,7 +32,7 @@ const Card = ({ item }) => {
       {...attributes}
       {...listeners}
       ref={setNodeRef}
-      className='bg-[white] p-[20px] w-fit relative dragging'>
+      className='bg-[white] p-[20px] w-fit absolute dragging'>
       {item.text}
     </div>
   )
@@ -42,7 +43,7 @@ const Droppable = ({ container, children }) => {
     id: container
   })
   return (
-    <div ref={setNodeRef} className='bg-[grey] '>
+    <div ref={setNodeRef} className='bg-[grey] relative'>
       {children}
     </div>
   )
@@ -114,8 +115,9 @@ const Board = () => {
       const [removedItem, newSourceList] = removeFromList(sourceItems, itemIdx)
 
       newItems[sourceContainer] = newSourceList
-      newItems[destinationContainer] = {removedItem , ...destinationItems}
-
+      newItems[destinationContainer] = addToList(destinationItems, destinationItems.length, removedItem)
+      
+      setItems(newItems)
     }
 
 
@@ -125,6 +127,7 @@ const Board = () => {
 
   const onDragEnd = (result) => {
     const { active, over, delta } = result;
+    console.log(result)
     if (!over) {
       return;
     }
@@ -148,31 +151,46 @@ const Board = () => {
     newItems[sourceContainer] = newSourceList
 
 
+
+
     setItems(newItems)
 
   }
 
 
   return (
+    <>
+    {containers.map((container, index) => (
+      <div className='bg-[yellow]'>
+      <h1 color="text-[white]">{container}</h1>
+      <div>{items[container].map(item => (
+        <p>{item.text} - ( {item.x} , {item.y})</p>
+      ))}</div>
+      </div>
+    ))}
     <DndContext
       sensors={sensors}
       onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       modifiers={[restrictToWindowEdges]}
-      collisionDetection={pointerWithin}
+      collisionDetection={rectOverlap}
     >
 
       <div className='grid grid-cols-2 gap-[250px] p-[100px] bg-[black] h-screen'>
         {containers.map((container) => (
+          <>
           <Droppable container={container} key={container}>
             {items[container].map((item) => (
               <Card item={item} key={item.id} />
             ))}
           </Droppable>
+          </>
         ))}
       </div>
 
     </DndContext>
+    
+    </>
   )
 }
 
