@@ -1,6 +1,7 @@
 
-
-import {sortCollisionsDesc} from './helpers';
+function sortCollisionsDesc({data: {value: a}}, {data: {value: b}}) {
+  return b - a;
+}
 
 /**
  * Returns the intersecting rectangle area between two rectangles
@@ -20,14 +21,15 @@ export function getIntersectionRatio(
     const targetArea = target.width * target.height;
     const entryArea = entry.width * entry.height;
     const intersectionArea = width * height;
-    const intersectionRatio =
-      intersectionArea / (targetArea + entryArea - intersectionArea);
-
-    return Number(intersectionRatio.toFixed(4));
+    console.log(intersectionArea , " " , targetArea)
+    if (intersectionArea === targetArea) {
+      console.log(true)
+      return true
+    }
   }
 
   // Rectangles do not overlap, or overlap has an area of zero (edge/corner overlap)
-  return 0;
+  return false;
 }
 
 /**
@@ -45,13 +47,14 @@ export const rectOverlap = ({
     const {id} = droppableContainer;
     const rect = droppableRects.get(id);
 
-    if (rect) {
-      const intersectionRatio = getIntersectionRatio(rect, collisionRect);
 
-      if (intersectionRatio > 0.011496729852566234) {
+    if (rect) {
+      const isOverlap = getIntersectionRatio(rect, collisionRect);
+
+      if (isOverlap) {
         collisions.push({
           id,
-          data: {droppableContainer, value: intersectionRatio},
+          data: {droppableContainer, value: isOverlap},
         });
       }
     }
