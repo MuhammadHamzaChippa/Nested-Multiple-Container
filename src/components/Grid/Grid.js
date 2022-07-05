@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from "react";
 import {
     DndContext,
     closestCenter,
@@ -7,25 +7,31 @@ import {
     TouchSensor,
     useSensor,
     useSensors,
-    DragOverlay
+    DragOverlay,
+    useDroppable,
 } from "@dnd-kit/core";
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    rectSortingStrategy,
-} from "@dnd-kit/sortable";
-import Item from './Item';
-
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from "@dnd-kit/sortable";
+import Item from "./Item";
 
 const Grid = () => {
     const [items, setItems] = useState({
-        A:  [{id: "1" , text: "A1"} , {id: "2" , text: "A2"} , {id: "3" , text: "A3"}  , {id: "4" , text: "A4"}  , {id: "5" , text: "A5"} ],
-        B: [{id: "6" , text: "B1"} , {id: "7" , text: "B2"} , {id: "8" , text: "B3"}  , {id: "9" , text: "B4"}  , {id: "10" , text: "B5"}]
-    }
-    )
-    const [containers, setContainers] = useState(Object.keys(items))
-    const [activeId, setActiveId] = useState()
+        A: [
+            { id: "1", text: "A1" },
+            { id: "2", text: "A2" },
+            { id: "3", text: "A3" },
+            { id: "4", text: "A4" },
+            { id: "5", text: "A5" },
+        ],
+        B: [
+            { id: "6", text: "B1" },
+            { id: "7", text: "B2" },
+            { id: "8", text: "B3" },
+            { id: "9", text: "B4" },
+            { id: "10", text: "B5" },
+        ],
+    });
+    const [containers, setContainers] = useState(Object.keys(items));
+    const [activeId, setActiveId] = useState();
     const recentlyMovedToNewContainer = useRef(false);
 
     useEffect(() => {
@@ -36,36 +42,36 @@ const Grid = () => {
 
     const findContainer = (id) => {
         if (id in items) {
-            return id
+            return id;
         }
-        return Object.keys(items).find((key) => items[key].map(item => item.id).includes(id));
-    }
+        return Object.keys(items).find((key) => items[key].map((item) => item.id).includes(id));
+    };
 
     const sensors = useSensors(
         useSensor(PointerSensor),
-        useSensor(TouchSensor , {}) , 
+        useSensor(TouchSensor, {}),
         useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates
+            coordinateGetter: sortableKeyboardCoordinates,
         })
     );
 
     const handleDragStart = (result) => {
-        const container = findContainer(result.active.id)
-        const idx = items[container].findIndex(item => item.id === result.active.id)
-        console.log("Start" , result)
-        setActiveId(items[container][idx])
-    }
+        const container = findContainer(result.active.id);
+        const idx = items[container].findIndex((item) => item.id === result.active.id);
+        console.log("Start", result);
+        setActiveId(items[container][idx]);
+    };
 
     const handleDragOver = (result) => {
-        console.log("Drag Over", result)
-        const {active, over} = result;
+        console.log("Drag Over", result);
+        const { active, over } = result;
         const overId = over?.id;
         if (overId == null || active.id in items) {
             return;
         }
         const overContainer = findContainer(overId);
         const activeContainer = findContainer(active.id);
-         
+
         if (!overContainer || !activeContainer) {
             console.log("No container found");
             return;
@@ -75,19 +81,18 @@ const Grid = () => {
             setItems((items) => {
                 const activeItems = items[activeContainer];
                 const overItems = items[overContainer];
-                
-                const overIndex = overItems.findIndex(item => item.id === overId);
-                const activeIndex = activeItems.findIndex(item => item.id === active.id)
+
+                const overIndex = overItems.findIndex((item) => item.id === overId);
+                const activeIndex = activeItems.findIndex((item) => item.id === active.id);
 
                 let newIndex;
                 if (overId in items) {
-                    newIndex = overItems.length + 1
+                    newIndex = overItems.length + 1;
                 } else {
                     const isBelowOverItem =
                         over &&
                         active.rect.current.translated &&
-                        active.rect.current.translated.top >
-                        over.rect.top + over.rect.height;
+                        active.rect.current.translated.top > over.rect.top + over.rect.height;
 
                     const modifier = isBelowOverItem ? 1 : 0;
                     newIndex = overIndex > 0 ? overIndex + modifier : overItems.length + 1;
@@ -97,61 +102,51 @@ const Grid = () => {
 
                 return {
                     ...items,
-                    [activeContainer]: items[activeContainer].filter(
-                        (item) => item.id !== active.id
-                    ),
+                    [activeContainer]: items[activeContainer].filter((item) => item.id !== active.id),
                     [overContainer]: [
                         ...items[overContainer].slice(0, newIndex),
                         items[activeContainer][activeIndex],
-                        ...items[overContainer].slice(
-                            newIndex,
-                            items[overContainer].length
-                        ),
+                        ...items[overContainer].slice(newIndex, items[overContainer].length),
                     ],
                 };
             });
         }
-    }
+    };
 
     const handleDragEnd = (result) => {
-       const {active, over} = result
-        const activeContainer = findContainer(active.id) ; 
-       
-       if (!activeContainer) {
-        setActiveId(null); 
-        return ;
-       }
-       
-       const overId = over?.id;
+        const { active, over } = result;
+        const activeContainer = findContainer(active.id);
+
+        if (!activeContainer) {
+            setActiveId(null);
+            return;
+        }
+
+        const overId = over?.id;
 
         if (overId == null) {
-          setActiveId(null);
-          return;
+            setActiveId(null);
+            return;
         }
 
         const overContainer = findContainer(overId);
         if (overContainer) {
-            const activeIndex = items[activeContainer].findIndex(item => item.id === active.id);
-            const overIndex = items[overContainer].findIndex(item => item.id === overId);
-  
+            const activeIndex = items[activeContainer].findIndex((item) => item.id === active.id);
+            const overIndex = items[overContainer].findIndex((item) => item.id === overId);
+
             if (activeIndex !== overIndex) {
-              setItems((items) => ({
-                ...items,
-                [overContainer]: arrayMove(
-                  items[overContainer],
-                  activeIndex,
-                  overIndex
-                ),
-              }));
+                setItems((items) => ({
+                    ...items,
+                    [overContainer]: arrayMove(items[overContainer], activeIndex, overIndex),
+                }));
             }
-          }
-          setActiveId(null);
+        }
+        setActiveId(null);
+    };
 
-    }
-
-    const onDragCancel =() => {
-        setActiveId(null)
-    }
+    const onDragCancel = () => {
+        setActiveId(null);
+    };
 
     return (
         <DndContext
@@ -164,38 +159,44 @@ const Grid = () => {
         >
             <div
                 style={{
-                    display: 'inline-grid',
-                    boxSizing: 'border-box',
+                    display: "inline-grid",
+                    boxSizing: "border-box",
                     padding: 20,
-                    gridAutoFlow: 'column',
+                    gridAutoFlow: "column",
                 }}
             >
                 {containers.map((container) => {
                     return (
-                        <div className='bg-[grey]'>
+                        <div className="bg-[grey]">
                             <h1>{container}</h1>
-                            <div className='bg-[green] grid grid-cols-4 gap-4 p-[20px] m-[10px]'>
-                                <SortableContext items={items[container].map(item => item.id)} strategy={rectSortingStrategy}>
-                                    {items[container].map(item => {
-                                        return (
-                                            <Item item={item} key={item.id} />
-                                        )
-                                    })}
-                                    <DragOverlay>
-                                        {activeId ? (
-                                            <Item item={activeId} />
-                                        ) : null}
-                                    </DragOverlay> 
-                                    
-                                </SortableContext>
-                            </div>
+                            <DroppableContainer container={container}>
+                            <SortableContext
+                                items={items[container].map((item) => item.id)}
+                                strategy={rectSortingStrategy}
+                            >
+                                {items[container].map((item) => {
+                                    return <Item item={item} key={item.id} />;
+                                })}
+                                <DragOverlay>{activeId ? <Item item={activeId} /> : null}</DragOverlay>
+                            </SortableContext>
+                            </DroppableContainer>
                         </div>
-                    )
+                    );
                 })}
             </div>
-
         </DndContext>
-    )
-}
+    );
+};
 
-export default Grid
+const DroppableContainer = ({ container, children }) => {
+    const { setNodeRef } = useDroppable({
+        id: container,
+    });
+    return (
+        <div ref={setNodeRef} className="bg-[green] grid grid-cols-4 gap-4 p-[20px] m-[10px]">
+            {children}
+        </div>
+    );
+};
+
+export default Grid;
