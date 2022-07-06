@@ -83,6 +83,13 @@ const NestedList = () => {
     });
 
 
+    const findContainer = (id) => {
+        if (id in items) {
+            return id;
+        }
+        return Object.keys(items).find((key) => items[key].map((item) => item.id).includes(id));
+    };
+
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(TouchSensor, {}),
@@ -91,29 +98,102 @@ const NestedList = () => {
         })
     );
 
+    const [activeId, setActiveId] = useState();
+
+
     const handleDragStart = (result) => {
-        // const idx = libraries.findIndex((library) => library.id === result.active.id);
-        // setActiveItem(libraries[idx]);
+        const container = findContainer(result.active.id);
+        const idx = items[container].findIndex((item) => item.id === result.active.id);
+        console.log("Start", result);
+        setActiveId(items[container][idx]);
     };
 
-    const findCard = (result) => {};
+
 
     const handleDragOver = (result) => {
-        console.log(result);
+        console.log("Drag Over", result);
+        const { active, over } = result;
+        const overId = over?.id;
+        if (overId == null || active.id in items) {
+            return;
+        }
+        const overContainer = findContainer(overId);
+        const activeContainer = findContainer(active.id);
+
+        if (!overContainer || !activeContainer) {
+            console.log("No container found");
+            return;
+        }
+
+        if (activeContainer !== overContainer) {
+            setItems((items) => {
+                const activeItems = items[activeContainer];
+                const overItems = items[overContainer];
+
+                const overIndex = overItems.findIndex((item) => item.id === overId);
+                const activeIndex = activeItems.findIndex((item) => item.id === active.id);
+
+                let newIndex;
+                if (overId in items) {
+                    newIndex = overItems.length + 1;
+                } else {
+                    const isBelowOverItem =
+                        over &&
+                        active.rect.current.translated &&
+                        active.rect.current.translated.top > over.rect.top + over.rect.height;
+
+                    const modifier = isBelowOverItem ? 1 : 0;
+                    newIndex = overIndex > 0 ? overIndex + modifier : overItems.length + 1;
+                }
+
+                // recentlyMovedToNewContainer.current = true;
+
+                return {
+                    ...items,
+                    [activeContainer]: items[activeContainer].filter((item) => item.id !== active.id),
+                    [overContainer]: [
+                        ...items[overContainer].slice(0, newIndex),
+                        items[activeContainer][activeIndex],
+                        ...items[overContainer].slice(newIndex, items[overContainer].length),
+                    ],
+                };
+            });
+        }
     };
 
     const handleDragEnd = (result) => {
-        // const { active, over } = result;
-        // console.log(result);
-        // if (active.id !== over.id) {
-        //     setLibraries((items) => {
-        //         const oldIndex = items.findIndex((item) => item.id === active.id);
-        //         const newIndex = items.findIndex((item) => item.id === over.id);
+        const { active, over } = result;
+        const activeContainer = findContainer(active.id);
 
-        //         return arrayMove(items, oldIndex, newIndex);
-        //     });
-        // }
-        // setActiveItem(null);
+        if (!activeContainer) {
+            setActiveId(null);
+            return;
+        }
+
+        const overId = over?.id;
+
+        if (overId == null) {
+            setActiveId(null);
+            return;
+        }
+
+        const overContainer = findContainer(overId);
+        if (overContainer) {
+            const activeIndex = items[activeContainer].findIndex((item) => item.id === active.id);
+            const overIndex = items[overContainer].findIndex((item) => item.id === overId);
+
+            if (activeIndex !== overIndex) {
+                setItems((items) => ({
+                    ...items,
+                    [overContainer]: arrayMove(items[overContainer], activeIndex, overIndex),
+                }));
+            }
+        }
+        setActiveId(null);
+    };
+
+    const onDragCancel = () => {
+        setActiveId(null);
     };
 
     const handleDragCancel = () => {

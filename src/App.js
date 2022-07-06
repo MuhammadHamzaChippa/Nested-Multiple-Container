@@ -6,7 +6,7 @@ import Board from './components/Board/Board';
 import NestedList from './components/NestedList/NestedList';
 function App() {
   return (
-    <Grid />
+    <NestedList />
   );
 }
 
