@@ -222,9 +222,9 @@ const NestedList = () => {
                 >
                     {Object.keys(items).map((container) => {
                         return (
-                            <div className="bg-[grey] text-center">
-                                <h1 className="mt-[10px] text-[24px]">{container}</h1>
-                                <div className="bg-[green] grid grid-rows-4 gap-2 p-[20px] m-[10px] ">
+                            <div style={{background: "grey" , textAlign: "center"}}>
+                                <h1 style={{marginTop: 10 , fontSize: 24}}>{container}</h1>
+                                <div style={{background: "green" , display: "flex" , flexDirection: "column" ,padding: 20, margin: 10}}>
                                 <SortableContext
                                         items={items[container].map((item) => item.id)}
                                         strategy={verticalListSortingStrategy}
@@ -259,12 +259,14 @@ const Block = ({ block }) => {
     const style = {
         transition,
         transform: CSS.Transform.toString(transform),
-    };
-    const styles = {
-        container: `${isDragging ? "opacity-[0.5]" : "opacity-1"} bg-[lightblue] text-center my-2 p-2`,
+        opacity: isDragging ? 0.5 : 1 , 
+        background: "lightblue",
+        textAlign: "center",
+        margin: 10, 
+        padding: 5
     };
     return (
-        <div ref={setNodeRef} {...attributes} {...listeners} style={style} className={styles.container}>
+        <div ref={setNodeRef} {...attributes} {...listeners} style={style} >
             {block.text}
         </div>
     );

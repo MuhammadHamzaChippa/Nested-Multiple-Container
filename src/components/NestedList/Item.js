@@ -9,18 +9,20 @@ export const Item = ({ item , children }) => {
     const style = {
         transition,
         transform: CSS.Transform.toString(transform),
+        opacity: isDragging ? 0.5 : 1 , 
+        background: "lightgreen",
+        textAlign: "center",
+        margin: 10, 
+        padding: 5
 
     }
-    const styles = {
-        container: `${isDragging ? "opacity-[0.5]" : "opacity-1"} bg-[lightgreen] text-center my-2 p-2`,
-    };
+   
     return (
         <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
         style={style}
-        className={styles.container}
     >
         {item.text}
         {children}
