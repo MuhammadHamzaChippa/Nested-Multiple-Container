@@ -102,10 +102,12 @@ const NestedList = () => {
 
 
     const handleDragStart = (result) => {
+        if (result.active.data.current.type === "card") {
         const container = findContainer(result.active.id);
         const idx = items[container].findIndex((item) => item.id === result.active.id);
         console.log("Start", result);
         setActiveId(items[container][idx]);
+    }
     };
 
 

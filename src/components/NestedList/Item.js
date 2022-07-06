@@ -3,7 +3,9 @@ import {useSortable , SortableContext, verticalListSortingStrategy} from "@dnd-k
 import { Children } from "react";
 
 export const Item = ({ item , children }) => {
-    const { setNodeRef, attributes, listeners, transition, transform, isDragging } = useSortable({ id: item.id });
+    const { setNodeRef, attributes, listeners, transition, transform, isDragging } = useSortable({ id: item.id , data: {
+        type: "card"
+    } });
     const style = {
         transition,
         transform: CSS.Transform.toString(transform),
